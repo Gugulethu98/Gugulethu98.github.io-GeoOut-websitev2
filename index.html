@@ -1,0 +1,804 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>GeoOut</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background-color: #f9f9f9;
+      box-sizing: border-box;
+    }
+
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background-color: white;
+      border-bottom: 1px solid #ddd;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .navbar .left {
+      font-size: 1em;
+      color: gray;
+    }
+
+    .navbar .right a {
+      margin-left: 20px;
+      text-decoration: none;
+      color: gray;
+      font-size: 0.95em;
+    }
+
+    .navbar select {
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .appName {
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    .appName h1 {
+      font-size: 8vw;
+      color: gray;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+    }
+
+    .appName h1 span {
+      display: inline-block;
+    }
+
+    .appName h1 i {
+      font-size: 1em;
+      transform: translateY(0.15em);
+    }
+
+    .appName img {
+      height: 2.5em;
+      margin: 0 -0.8em;
+      transform: translateY(0.4em);
+    }
+
+    .appName p {
+      font-size: 1.2em;
+      color: #555;
+      margin-top: 10px;
+    }
+
+    .about {
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 0 20px;
+      text-align: center;
+    }
+
+    .about h2 {
+      font-size: 2em;
+      color: #333;
+    }
+
+    .about p {
+      font-size: 1em;
+      color: #666;
+      line-height: 1.6em;
+    }
+
+    .cta {
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    .cta button {
+      padding: 12px 25px;
+      font-size: 1em;
+      background-color: #007BFF;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+    }
+
+    .cta button:hover {
+      background-color: #0056b3;
+    }
+
+    #map {
+      height: calc(100vh - 100px); /* 100vh is the full screen height, subtracting 100px for the footer */
+      width: 100%;
+      max-width: 800px;
+      margin: 30px auto;
+    }
+
+    .legal-links {
+      margin-top: 30px;
+      text-align: center;
+      color: gray;
+      font-size: 0.95em;
+    }
+
+    .legal-links a {
+      color: #007BFF;
+      text-decoration: none;
+    }
+
+    .legal-links a:hover {
+      text-decoration: underline;
+    }
+
+    footer {
+      text-align: center;
+      color: gray;
+      width: 100%;
+      padding: 10px 0;
+      background-color: white;
+      border-top: 1px solid #ddd;
+      position: relative; /* Changed from fixed to relative */
+      margin-top: 20px;
+    }
+
+    .social-icons a {
+      margin: 0 10px;
+      color: gray;
+      text-decoration: none;
+      font-size: 1.2em;
+    }
+
+    @media (max-width: 600px) {
+      .appName h1 {
+        font-size: 10vw;
+      }
+
+      .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .navbar .right {
+        margin-top: 10px;
+      }
+
+      .social-icons a {
+        font-size: 1em;
+      }
+    }
+#backToTop {
+  display: none; /* Hidden by default */
+  position: fixed;
+  bottom: 40px;
+  right: 30px;
+  z-index: 100;
+  font-size: 24px;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  padding: 12px 16px;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  transition: background-color 0.3s ease;
+}
+
+#backToTop:hover {
+  background-color: #0056b3;
+}
+
+#menuToggle {
+  background-color: transparent;
+  border: none;
+  font-size: 1.1em;
+  color: gray;
+  cursor: pointer;
+  margin-left: 15px;
+  padding: 0;
+}
+
+#menuToggle:hover {
+  color: #007BFF;
+}
+
+
+#sideMenu {
+  position: fixed;
+  right: -300px; /* Initially hidden off-screen to the right */
+  top: 0;
+  width: 280px;
+  height: 100%;
+  background-color: white;
+  box-shadow: -2px 0 5px rgba(0,0,0,0.2); /* shadow on left side now */
+  z-index: 1000;
+  padding: 20px;
+  transition: right 0.3s ease-in-out;
+  overflow-y: auto;
+}
+
+#sideMenu.open {
+  right: 0; /* Slide in from right */
+}
+
+
+#sideMenu h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+#sideMenu ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+#sideMenu ul ul {
+  padding-left: 15px;
+}
+
+#sideMenu li {
+  margin-bottom: 15px;
+}
+
+#sideMenu a {
+  color: #007BFF;
+  text-decoration: none;
+  font-size: 0.95em;
+}
+
+#sideMenu a:hover {
+  text-decoration: underline;
+}
+
+#closeMenu {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+  font-size: 1.5em;
+  cursor: pointer;
+  color: gray;
+}
+
+#overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+  z-index: 999; /* Below the side menu */
+  display: none; /* Hidden by default */
+}
+
+#sideMenu.open ~ #overlay {
+  display: block; /* Show when menu is open */
+}
+
+
+  </style>
+</head>
+<body>
+<!-- Overlay for dimming effect -->
+<div id="overlay"></div>
+
+<div class="navbar">
+  <div class="left">
+    🌐 
+    <select aria-label="Choose language">
+      <option value="en">English</option>
+      <option value="zu">IsiZulu</option>
+      <option value="xh">IsiXhosa</option>
+      <option value="st">Sesotho</option>
+      <option value="tn">Setswana</option>
+      <option value="af">Afrikaans</option>
+    </select>
+  </div>
+  <div class="right">
+    <a href="#">Login</a>
+    <a href="#">Sign Up</a>
+    <a href="#">Help</a>
+    <button id="menuToggle" aria-label="Open Menu">
+      <i class="fas fa-map-pin"></i>
+    </button>
+  </div> 
+</div>
+
+<!-- Side Menu -->
+<div id="sideMenu">
+  <span id="closeMenu">&times;</span>
+  <h3>Menu</h3>
+  <ul>
+    <li><strong>Products</strong>
+      <ul>
+        <li><a href="#">Taxi Routes</a></li>
+        <li><a href="#">Directions</a></li>
+        <li><a href="#">Pricing</a></li>
+      </ul>
+    </li>
+    <li><strong>Support</strong>
+      <ul>
+        <li><a href="#">Report an Issue</a></li>
+        <li><a href="#">FAQ</a></li>
+      </ul>
+    </li>
+    <li><strong>Company</strong>
+      <ul>
+        <li><a href="#">About GeoOut</a></li>
+      </ul>
+    </li>
+    <li><strong>Location</strong>
+      <ul>
+        <li><a href="#">Cities</a></li>
+        <li><a href="#">Provinces</a></li>
+      </ul>
+    </li>
+    <li>
+      <strong>Download</strong>
+      <div style="margin-top: 10px;">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?data=https://play.google.com/store/apps/details?id=your.app.id&size=150x150" alt="QR Code for download" width="120">
+        <p style="font-size: 0.9em;">Scan to download</p>
+      </div>
+    </li>
+  </ul>
+</div>
+
+  <div class="appName">
+    <h1>
+   
+      <span>Geo</span>
+      <img src="Logo.png" alt="App Logo">
+      <span>ut</span>
+     
+    </h1>
+    <p>Your digital travel companion</p>
+  </div>
+
+  <div class="about">
+    <h2>About GeoOut</h2>
+    <p>GeoOut is a mobile platform built to guide users to local taxi ranks, real-time pricing,
+    	and accurate route directions. It's designed to support commuters, empower drivers, 
+		and make travel smarter and more efficient in South Africa and beyond. 
+		Let GeoOut help you navigate with ease, stay informed, and be your digital guide.</p>
+    <h6><b>Your digital travel companion for real-time taxi routes, pricing and directions</b></h6>
+  </div>
+
+  <div class="cta">
+    <button>Start Exploring</button>
+  </div>
+
+  <!-- Map -->
+  <div id="map"></div>
+
+  <!-- Contact & Legal -->
+  <div class="legal-links">
+    <a href="privacy.html">Privacy Policy</a> |
+    <a href="terms.html">Terms of Service</a><br>
+    Need help? <a href="mailto:support@geoout.com">Contact Support</a>
+  </div>
+  <div style="margin: 20px 0;">
+    <a href="https://play.google.com/store/apps/details?id=your.app.id" target="_blank">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
+           alt="Get it on Google Play" style="height: 50px; margin: 10px;" />
+    </a>
+    <a href="https://apps.apple.com/app/idYourAppID" target="_blank">
+      <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" 
+           alt="Download on the App Store" style="height: 50px; margin: 10px;" />
+    </a>
+  </div>
+ <button id="backToTop" title="Go to top">
+  ↑
+</button>
+  <footer>
+    <div class="social-icons">
+      <a href="#" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+      <a href="#" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+      <a href="#" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+    </div>
+    &copy; 2025 GeoOut. All rights reserved.
+  </footer>
+<script>
+  const menuToggle = document.getElementById('menuToggle');
+  const sideMenu = document.getElementById('sideMenu');
+  const closeMenu = document.getElementById('closeMenu');
+  const overlay = document.getElementById('overlay');
+
+  function toggleMenu() {
+    const isOpen = sideMenu.classList.contains('open');
+    sideMenu.classList.toggle('open');
+    overlay.style.display = isOpen ? 'none' : 'block';
+  }
+
+  menuToggle.addEventListener('click', toggleMenu);
+  closeMenu.addEventListener('click', toggleMenu);
+  overlay.addEventListener('click', toggleMenu);
+
+  // Optional: Close when clicking anywhere outside
+  window.addEventListener('click', (e) => {
+    if (
+      !sideMenu.contains(e.target) &&
+      !menuToggle.contains(e.target) &&
+      sideMenu.classList.contains('open')
+    ) {
+      toggleMenu();
+    }
+  });
+</script>
+
+
+  <script>
+  // Show the button when the user scrolls down 200px
+  window.onscroll = function() {
+    const btn = document.getElementById("backToTop");
+    if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+      btn.style.display = "block";
+    } else {
+      btn.style.display = "none";
+    }
+  };
+
+  // Scroll to the top when the button is clicked
+  document.getElementById("backToTop").onclick = function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+</script>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+  const map = L.map('map').setView([-28.4793, 24.6727], 6); // Center of South Africa
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  const taxiRanks = [
+    // Gauteng
+    { name: "Bree Taxi Rank", coords: [-26.2023, 28.0341] },
+    { name: "Noord Taxi Rank", coords: [-26.2038, 28.0469] },
+    { name: "Baragwanath Taxi Rank", coords: [-26.2707, 27.8696] },
+    { name: "Randburg Taxi Rank", coords: [-26.0904, 28.0067] },
+    { name: "Sunnyside Taxi Rank", coords: [-25.7545, 28.2131] },
+	{ name: "Faraday Taxi Rank", coords: [-26.2015, 28.0382] },
+	{ name: "MTN Taxi Rank", coords: [-26.2049, 28.0437] },
+	{ name: "Soweto Dube Taxi Rank", coords: [-26.2670, 27.8585] },
+	{ name: "Krugersdorp Taxi Rank", coords: [-26.0965, 27.7584] },
+	{ name: "Tembisa Plaza Taxi Rank", coords: [ -26.0165, 28.2135] },
+	{ name: "Boksburg Taxi Rank", coords: [-26.2041, 28.2578] },
+	{ name: "Johannesburg Central Taxi Rank ", coords: [-26.2044, 28.0383] },
+
+    // KwaZulu-Natal
+    { name: "Durban Workshop Taxi Rank", coords: [-29.8587, 31.0215] },
+    { name: "Pietermaritzburg Rank", coords: [-29.6123, 30.3794] },
+    { name: "Port Shepstone Taxi Rank", coords: [ -30.7452, 30.7450] },
+    { name: "Newcastle Taxi Rank", coords: [-27.7574, 29.9313] },
+	{ name: "Durban Central Market Taxi Rank", coords: [-29.8580, 31.0216] },
+    { name: "KwaMashu Taxi Rank", coords: [-29.7578, 31.0340] },
+	{ name: "YMCA Taxi Rank", coords: [-29.8575, 31.0210] },
+	{ name: "Cartwright Taxi Rank ", coords: [ -29.8582, 31.0212] },
+    { name: "Lamontville Taxi Rank", coords: [-29.8880, 30.9750] },
+    { name: "Malvern Taxi Rank", coords: [-29.8670, 30.9400] },
+
+    // Western Cape
+    { name: "Cape Town Central Rank", coords: [-33.9249, 18.4241] },
+    { name: "Bellville Taxi Rank", coords: [-33.8970, 18.6300] },
+    { name: "Khayelitsha Rank", coords: [-34.0290, 18.6740] },
+	{ name: "Mitchells Plain Taxi Rank", coords: [ -34.0420, 18.6020] },
+	{ name: "Gugulethu Taxi Rank", coords: [-33.9780, 18.5770] },
+    { name: "Nyanga Taxi Rank", coords: [ -33.9750, 18.5540] },
+	{ name: "Langa Taxi Rank", coords: [-33.9380, 18.5010] },
+	{ name: "Mfuleni Taxi Rank", coords: [ -33.9990, 18.7600] },
+    { name: "Wynberg Taxi Rank ", coords: [ -33.9780, 18.4630] },
+	{ name: "Claremont Taxi Rank", coords: [-33.9770, 18.4630] },
+
+    // Eastern Cape
+    { name: "Port Elizabeth Rank", coords: [-33.9610, 25.6020] },
+    { name: "Mthatha Rank", coords: [-31.5889, 28.7844] },
+    { name: "East London Rank", coords: [-32.9600, 27.8690] },
+	{ name: "Grahamstown Taxi Rank ", coords: [ -33.3140, 26.5240] },
+    { name: "Uitenhage Taxi Rank", coords: [-33.7590, 25.3790] },
+	{ name: "Lusikisiki Taxi Rank", coords: [ -31.5470, 28.2990] },
+	{ name: "Queenstown Taxi Rank", coords: [-31.8920, 26.8900] },
+	{ name: "Cofimvaba Taxi Rank ", coords: [ -32.0190, 27.3660] },
+	{ name: "Somerset East Taxi Rank ", coords: [ -33.2950, 25.5980] },
+	{ name: "Komani Taxi Rank", coords: [-31.5960, 27.3740] },
+
+    // Limpopo
+    { name: "Polokwane Rank", coords: [-23.8960, 29.4570] },
+    { name: "Thohoyandou Rank", coords: [-22.9749, 30.4518] },
+    { name: "Mokopane Rank", coords: [-24.1943, 29.0097] },
+	{ name: "Giyani Taxi Rank", coords: [ -23.5660, 30.0420] },
+	{ name: "Tzaneen Taxi Rank", coords: [-23.8350, 30.1680] },
+	{ name: "Modimolle Taxi Rank", coords: [ -24.6880, 28.4280] },
+	{ name: "Bela-Bela Taxi Rank", coords: [-24.8950, 28.2340] },
+	{ name: "Lephalale Taxi Rank ", coords: [ -23.6570, 27.7480] },
+	{ name: "Senwabarwana Taxi Rank", coords: [-23.0680, 29.1990] },
+	{ name: "Makhado Taxi Rank", coords: [ -22.9890, 29.8900] },
+
+    // Mpumalanga
+    { name: "Nelspruit Taxi Rank", coords: [-25.4658, 30.9853] },
+    { name: "Witbank Taxi Rank", coords: [-25.8753, 29.2335] },
+    { name: "Ermelo Rank", coords: [-26.5332, 29.9852] },
+
+    // North West
+    { name: "Mahikeng Rank", coords: [-25.8656, 25.6419] },
+    { name: "Rustenburg Rank", coords: [-25.6651, 27.2423] },
+
+    // Northern Cape
+    { name: "Kimberley Rank", coords: [-28.7383, 24.7636] },
+    { name: "Upington Taxi Rank", coords: [-28.4565, 21.2427] },
+
+    // Free State
+    { name: "Bloemfontein Rank", coords: [-29.0852, 26.1596] },
+    { name: "Welkom Taxi Rank", coords: [-27.9974, 26.6670] }
+  ];
+
+  taxiRanks.forEach(rank => {
+    L.marker(rank.coords)
+      .addTo(map)
+      .bindPopup(`<b>${rank.name}</b>`);
+  });
+</script>
+
+</body>
+</html>
+
+
+------------------------------------------
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GeoOut</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <style>
+    body {
+      font-size: 100%;
+      background-color: black;
+      margin: 0;
+      padding: 0;
+      position: relative;
+      height: 200vh; /* For scroll */
+      transition: margin-left 0.5s;
+    }
+
+    /* Transparent background image layer */
+    .bg-image {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('rsz_taxi_rank_.jpg') no-repeat center center/cover;
+      opacity: 0;
+      transition: opacity 1s ease;
+      z-index: 0;
+      pointer-events: none; /* allows clicks through */
+    }
+
+    h1 {
+      font-size: 10em;
+      color: white;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      margin: 150px 0;
+    }
+
+    footer {
+      text-align: center;
+      color: gray;
+      position: fixed;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      padding: 10px 0;
+      z-index: 1;
+      background: rgba(0, 0, 0, 0.5);
+    }
+
+    .social-icons a {
+      margin: 0 10px;
+      color: white;
+      text-decoration: none;
+      font-size: 1.2em;
+    }
+
+    /* Side menu styles */
+    #sideMenu {
+      height: 100%;
+      width: 250px;
+      position: fixed;
+      top: 0;
+      left: -250px; /* Initially hidden */
+      background-color: #333;
+      color: white;
+      padding-top: 60px;
+      transition: left 0.3s ease;
+      z-index: 2;
+    }
+
+    #sideMenu a {
+      padding: 10px 15px;
+      text-decoration: none;
+      font-size: 18px;
+      color: white;
+      display: block;
+      transition: background-color 0.3s;
+    }
+
+    #sideMenu a:hover {
+      background-color: #575757;
+    }
+
+    .sideMenuButton {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background-color: #333;
+      color: white;
+      padding: 10px;
+      border-radius: 50%;
+      cursor: pointer;
+      z-index: 3;
+    }
+.sideMenu-visible {
+  left: 0 !important;
+}
+    .sideMenuButton i {
+      font-size: 20px;
+    }
+
+    /* Content wrapper */
+    .content-wrapper {
+      transition: margin-left 0.5s;
+    }
+
+    .content-shifted {
+      margin-left: 250px;
+    }
+
+    /* Top Navigation Bar */
+    .top-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+
+    /* Left side of the top nav (empty placeholder) */
+    .top-nav .left {
+      font-size: 1em;
+      color: gray;
+    }
+
+    /* Right side of the top nav (login, sign up, and language selector) */
+    .top-nav .right {
+      display: flex;
+      align-items: center;
+    }
+
+    .top-nav .right a {
+      margin-left: 20px;
+      text-decoration: none;
+      color: white;
+      font-size: 0.95em;
+    }
+
+    .top-nav select {
+      padding: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background-color: #333;
+      color: white;
+      margin-left: 15px;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <div class="top-nav">
+    <div class="left">
+      <!-- Placeholder for logo or additional content if necessary -->
+    </div>
+    <div class="right">
+      <!-- Language selector -->
+      🌐
+      <select aria-label="Choose language">
+        <option value="en">English</option>
+        <option value="zu">IsiZulu</option>
+        <option value="xh">IsiXhosa</option>
+        <option value="st">Sesotho</option>
+        <option value="tn">Setswana</option>
+        <option value="af">Afrikaans</option>
+      </select>
+      
+      <!-- Login, Sign Up, Help links -->
+      <a href="#">Login</a>
+      <a href="#">Sign Up</a>
+      <a href="#">Help</a>
+    </div> 
+  </div>
+
+  <!-- Side Menu -->
+  <div id="sideMenu">
+    <a href="#">Home</a>
+    <a href="#">About</a>
+    <a href="#">Services</a>
+    <a href="#">Contact</a>
+  </div>
+
+  <!-- Side Menu Toggle Button -->
+  <div class="sideMenuButton" id="sideMenuButton">
+    <i class="fas fa-thumbtack"></i>
+  </div>
+
+  <!-- Background Image -->
+  <div class="bg-image" id="bgImage"></div>
+
+  <!-- Main Content -->
+  <div class="content-wrapper">
+    <h1><b>GeoOut</b></h1>
+    <footer>
+      <div class="social-icons">
+        <a href="#" target="_blank" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+        <a href="#" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+        <a href="#" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+      </div>
+      &copy; 2025 GeoOut. All rights reserved.
+    </footer>
+  </div>
+
+  <script>
+    let lastScrollTop = 0;
+    const bg = document.getElementById("bgImage");
+
+    window.addEventListener("scroll", function () {
+      let st = window.pageYOffset || document.documentElement.scrollTop;
+      
+      if (st > lastScrollTop) {
+        // Scrolling down - fade in image
+        bg.style.opacity = "0.3"; // You can adjust this value
+      } else {
+        // Scrolling up - fade out image
+        bg.style.opacity = "0";
+      }
+
+      lastScrollTop = st <= 0 ? 0 : st;
+    }, false);
+
+    // Side Menu functionality
+    const sideMenu = document.getElementById("sideMenu");
+    const sideMenuButton = document.getElementById("sideMenuButton");
+    const contentWrapper = document.querySelector(".content-wrapper");
+
+    sideMenuButton.addEventListener("click", function () {
+      if (sideMenu.style.left === "0px") {
+        sideMenu.style.left = "-250px";
+        contentWrapper.classList.remove("content-shifted");
+      } else {
+        sideMenu.style.left = "0px";
+        contentWrapper.classList.add("content-shifted");
+      }
+    });
+  </script>
+
+</body>
+</html>
+
